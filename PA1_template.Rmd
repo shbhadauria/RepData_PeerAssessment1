@@ -1,25 +1,110 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
+title: "Reproducible research-Peer assessment1"
 output: 
-  html_document:
-    keep_md: true
+ html_document:
+  keep_md: True
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set( fig.path = "figure/")
+```
+#1. Code for data processing
+```{r}
+data=read.csv("C:/Users/shbhadauria/Desktop/coursera/reproducible research/activity.csv")
+data$date=as.Date(data$date)
+total_no_steps=aggregate(data$steps, by=list(date=data$date), FUN=sum)
+```
+#2 Histogram of steps
+```{r Histogram}
+library(ggplot2)
+plot1<-ggplot(total_no_steps, aes(x=total_no_steps$date,y=total_no_steps$x))+geom_histogram(stat="Identity")+xlab("Day")+ylab("Total no of steps in a day")
+plot1
+```
 
-## Loading and preprocessing the data
+#3. Mean And Median
+```{r}
+me=mean(total_no_steps$x,na.rm=TRUE)
+med=median(total_no_steps$x,na.rm=TRUE)
+me
+med
+```
 
+#4. Time series plot
+```{r Time series plot}
+#time series plot
+library(TTR)
+data_ts=na.omit(data)
+avg_no_steps=SMA(data_ts$steps,n=1)
+data_ts$steps=avg_no_steps
+plot2=ggplot(data_ts, aes(interval, steps)) + geom_line() + xlab("Interval") + ylab("Average daily steps")
+plot2
+```
 
+#5. Interval with maximum steps
+```{r}
+intv=data_ts[which.max(data_ts$steps), ]
+print(paste0("Interval with maximum steps is ",intv$interval))
+```
 
-## What is mean total number of steps taken per day?
+#6. Code for creating new dataset with imputed values for missing values
+```{r}
+#missing value imputation
+library(Hmisc)
+steps_new=impute(data$steps, 0)  # replace with 0
+data_new=data
+data_new$steps=steps_new
+```
 
+#7. Histogram with imputed values
+```{r Histogram with imputed values}
+#histogram for imputed data
+total_no_steps_new=aggregate(data_new$steps, by=list(date=data_new$date), FUN=sum)
+plot3=ggplot(total_no_steps_new, aes(x=total_no_steps_new$date,y=total_no_steps_new$x))+geom_histogram(stat="Identity")+xlab("Day")+ylab("Total no of steps in a day")
+plot3
+#mean and median comparison
+me_new=mean(total_no_steps_new$x,na.rm=TRUE)
+med_new=median(total_no_steps_new$x,na.rm=TRUE)
+me_new
+med_new
+if(me_new>me){
+  print("Mean with imputed values is greater")
+}else {
+  print("Mean with non imputed values is greater")
+}
 
+if(med_new>med){
+  print("Median with imputed values is greater")
+}else {
+  print("Median with non imputed values is greater")
+}
 
-## What is the average daily activity pattern?
+```
 
+#8. Panel plot
+```{r Panel Plot}
+#Panel Plot
+wkdys=weekdays(data_new$date)
+data_new$day=wkdys
+for(i in 1:length(data_new$day)){
+  if(data_new$day[i]=="Saturday"|data_new$day[i]=="Sunday"){
+    data_new$daytype[i]="Weekend"
+    data_new$Daytype[i]=1
+    
+    }
+  else {
+    data_new$daytype[i]="Weekday"
+    data_new$Daytype[i]=0
+    }
+}
+library(dplyr)
+grp_data=group_by(data_new,Daytype)
+avg_no_steps=SMA(grp_data$steps,n=1)
+grp_data$steps=avg_no_steps
 
+group=unique(grp_data$daytype)
 
-## Imputing missing values
+plot4=xyplot(grp_data$steps ~ grp_data$interval| group, data = grp_data,type="l",xlab="5 minute interval",ylab = "Steps on daily basis")
+plot4
+```
 
-
-
-## Are there differences in activity patterns between weekdays and weekends?
