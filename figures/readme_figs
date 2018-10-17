@@ -1,0 +1,6 @@
+All the figures generated in the plot ar saved here
+the folder contains figures
+1. Histogram of total no of steps in a day
+2. Time series plot of average of steps per 5 minutes interval in a day
+3. Histogram of no of steps in a day with imputed data
+4. Panel plot for weekdays and weekend
